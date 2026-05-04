@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects | John Doe Portfolio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; text-align: center; }
+        nav { background: #333; color: white; padding: 1rem; position: sticky; top: 0; z-index: 100; }
+        nav a { color: white; text-decoration: none; margin: 0 1rem; padding: 0.5rem 1rem; transition: all 0.3s; }
+        nav a:hover { background: #555; border-radius: 5px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin: 2rem 0; }
+        .project-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .project-card:hover { transform: translateY(-5px); }
+        .project-content { padding: 1.5rem; }
+        .project-title { font-size: 1.5rem; margin-bottom: 0.5rem; color: #667eea; }
+        .project-tech { color: #666; font-size: 0.9rem; margin: 0.5rem 0; }
+        .btn-back { display: inline-block; background: #667eea; color: white; padding: 0.8rem 2rem; border-radius: 5px; text-decoration: none; margin: 1rem 0; transition: transform 0.3s; }
+        .btn-back:hover { transform: translateY(-2px); }
+        footer { text-align: center; padding: 2rem; background: #333; color: white; margin-top: 3rem; }
+        .env-badge { position: fixed; bottom: 20px; right: 20px; background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .loading { text-align: center; padding: 2rem; color: #666; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container" style="text-align: center;">
+            <a href="/">Home</a>
+            <a href="/projects">Projects</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 1rem;">📁 My Projects</h1>
+        <p style="text-align: center; color: #666;">Here are some of my recent works and case studies</p>
+        
+        <div id="projectsGrid" class="projects-grid">
+            <div class="loading">Loading projects...</div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="/" class="btn-back">← Back to Home</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 John Doe. Built with ❤️ on Azure App Service</p>
+    </footer>
+
+    <div class="env-badge" id="envBadge">Environment: Loading...</div>
+
+    <script>
+        fetch('/api/projects')
+            .then(res => res.json())
+            .then(projects => {
+                const grid = document.getElementById('projectsGrid');
+                grid.innerHTML = projects.map(project => `
+                    <div class="project-card">
+                        <div class="project-content">
+                            <h3 class="project-title">${project.name}</h3>
+                            <p>${project.description}</p>
+                            <div class="project-tech">🔧 ${project.tech}</div>
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(err => {
+                document.getElementById('projectsGrid').innerHTML = '<div class="loading">Failed to load projects. Please try again.</div>';
+            });
+        
+        fetch('/health')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('envBadge').textContent = `Environment: ${data.environment || 'development'}`;
+                document.getElementById('envBadge').style.background = 
+                    data.environment === 'production' ? '#10b981' : 
+                    data.environment === 'preproduction' ? '#f59e0b' : '#667eea';
+            });
+    </script>
+</body>
+</html>

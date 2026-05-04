@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Doe | Portfolio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; text-align: center; }
+        nav { background: #333; color: white; padding: 1rem; position: sticky; top: 0; }
+        nav a { color: white; text-decoration: none; margin: 0 1rem; padding: 0.5rem 1rem; transition: all 0.3s; }
+        nav a:hover { background: #555; border-radius: 5px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .hero { text-align: center; padding: 3rem 0; background: #f4f4f4; border-radius: 10px; margin-bottom: 2rem; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; color: #667eea; }
+        .skills { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 2rem 0; }
+        .skill { background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; }
+        .btn { display: inline-block; background: #667eea; color: white; padding: 0.8rem 2rem; border-radius: 5px; text-decoration: none; margin-top: 1rem; transition: transform 0.3s; }
+        .btn:hover { transform: translateY(-2px); background: #5a67d8; }
+        footer { text-align: center; padding: 2rem; background: #333; color: white; margin-top: 3rem; }
+        .env-badge { position: fixed; bottom: 20px; right: 20px; background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container" style="text-align: center;">
+            <a href="/">Home</a>
+            <a href="/projects">Projects</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>👨‍💻 John Doe</h1>
+            <p>Full-Stack Developer & DevOps Engineer</p>
+            <a href="/projects" class="btn">View My Work</a>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">About Me</h2>
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <p>I'm a passionate full-stack developer with 5+ years of experience building web applications. I specialize in Azure cloud, Node.js, and modern JavaScript frameworks.</p>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <h3>Experience</h3>
+                    <ul style="margin-left: 1.5rem;">
+                        <li>Senior DevOps Engineer - Tech Corp (2022-Present)</li>
+                        <li>Full-Stack Developer - Startup Inc (2019-2022)</li>
+                        <li>Frontend Developer - Agency Co (2017-2019)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 style="text-align: center; margin-bottom: 2rem;">Skills</h2>
+            <div class="skills">
+                <span class="skill">JavaScript/TypeScript</span>
+                <span class="skill">Node.js</span>
+                <span class="skill">React</span>
+                <span class="skill">Azure</span>
+                <span class="skill">Docker</span>
+                <span class="skill">Kubernetes</span>
+                <span class="skill">GitHub Actions</span>
+                <span class="skill">MongoDB</span>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 John Doe. Built with ❤️ on Azure App Service</p>
+    </footer>
+
+    <div class="env-badge" id="envBadge">Environment: Loading...</div>
+
+    <script>
+        fetch('/health')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('envBadge').textContent = `Environment: ${data.environment || 'development'}`;
+                document.getElementById('envBadge').style.background = 
+                    data.environment === 'production' ? '#10b981' : 
+                    data.environment === 'preproduction' ? '#f59e0b' : '#667eea';
+            });
+    </script>
+</body>
+</html>
