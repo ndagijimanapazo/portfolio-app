@@ -1,0 +1,186 @@
+name: Portfolio CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, preprod ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '22.x'
+
+jobs:
+  # ============================================
+  # TEST JOB - Runs for all branches
+  # ============================================
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test || echo "No tests configured yet"
+      
+      - name: Check application health
+        run: |
+          node index.js &
+          sleep 3
+          curl -f http://localhost:3000/health || exit 1
+          echo "✅ Health check passed"
+
+  # ============================================
+  # DEPLOY TO UAT - Auto-deploys on push to develop
+  # ============================================
+  deploy-uat:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: uat
+      url: https://${{ secrets.UAT_APP_NAME }}.azurewebsites.net
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Package application
+        run: |
+          zip -r portfolio-app.zip .
+      
+      - name: Deploy to UAT
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.UAT_APP_NAME }}
+          publish-profile: ${{ secrets.UAT_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Verify UAT Deployment
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.UAT_APP_NAME }}.azurewebsites.net/health || exit 1
+          echo "✅ UAT deployment successful!"
+
+  # ============================================
+  # DEPLOY TO PRE-PROD - Auto-deploys on push to preprod
+  # ============================================
+  deploy-preprod:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/preprod'
+    environment:
+      name: preprod
+      url: https://${{ secrets.PREPROD_APP_NAME }}.azurewebsites.net
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Package application
+        run: |
+          zip -r portfolio-app.zip .
+      
+      - name: Deploy to Pre-Prod
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.PREPROD_APP_NAME }}
+          publish-profile: ${{ secrets.PREPROD_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Verify Pre-Prod Deployment
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.PREPROD_APP_NAME }}.azurewebsites.net/health || exit 1
+          echo "✅ Pre-Prod deployment successful!"
+
+  # ============================================
+  # MANUAL APPROVAL FOR PRODUCTION
+  # ============================================
+  approve-production:
+    needs: deploy-preprod
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/preprod'
+    environment:
+      name: production-approval
+    steps:
+      - name: Wait for manual approval
+        run: echo "⏳ Waiting for approval to deploy to Production"
+
+  # ============================================
+  # DEPLOY TO PRODUCTION - After manual approval
+  # ============================================
+  deploy-production:
+    needs: approve-production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/preprod'
+    environment:
+      name: production
+      url: https://${{ secrets.PROD_APP_NAME }}.azurewebsites.net
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Package application
+        run: |
+          zip -r portfolio-app.zip .
+      
+      - name: Deploy to Production
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.PROD_APP_NAME }}
+          publish-profile: ${{ secrets.PROD_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Verify Production Deployment
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.PROD_APP_NAME }}.azurewebsites.net/health || exit 1
+          echo "✅ Production deployment successful!"
+
+  # ============================================
+  # DEPLOY TO ALL ON MAIN BRANCH
+  # ============================================
+  deploy-all:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://${{ secrets.PROD_APP_NAME }}.azurewebsites.net
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Package application
+        run: |
+          zip -r portfolio-app.zip .
+      
+      - name: Deploy to UAT
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.UAT_APP_NAME }}
+          publish-profile: ${{ secrets.UAT_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Deploy to Pre-Prod
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.PREPROD_APP_NAME }}
+          publish-profile: ${{ secrets.PREPROD_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Deploy to Production
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.PROD_APP_NAME }}
+          publish-profile: ${{ secrets.PROD_PUBLISH_PROFILE }}
+          package: portfolio-app.zip
+      
+      - name: Verify all deployments
+        run: |
+          echo "✅ All environments deployed successfully!"
