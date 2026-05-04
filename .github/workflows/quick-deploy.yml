@@ -1,0 +1,39 @@
+name: Quick Deploy to All Environments
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - uat
+          - preprod
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Selected Environment
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ 
+            github.event.inputs.environment == 'uat' && secrets.UAT_APP_NAME ||
+            github.event.inputs.environment == 'preprod' && secrets.PREPROD_APP_NAME ||
+            github.event.inputs.environment == 'production' && secrets.PROD_APP_NAME ||
+            secrets.UAT_APP_NAME
+          }}
+          publish-profile: ${{ 
+            github.event.inputs.environment == 'uat' && secrets.UAT_PUBLISH_PROFILE ||
+            github.event.inputs.environment == 'preprod' && secrets.PREPROD_PUBLISH_PROFILE ||
+            github.event.inputs.environment == 'production' && secrets.PROD_PUBLISH_PROFILE ||
+            secrets.UAT_PUBLISH_PROFILE
+          }}
+          package: .
+
